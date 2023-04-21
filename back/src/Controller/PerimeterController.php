@@ -79,9 +79,16 @@ class PerimeterController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         try {
-            if (!is_array($data['ips']))
-                throw new InvalidArgumentException('ips field must be an array');
-            $perimeter = $this->perimeterService->create($data['domainName'], $data['contactEmail'], $data['ips']);
+            if(isset($data['contactEmail']) && isset($data['domainNames']) && isset($data['ips'])) {
+                if (!is_array($data['ips']))
+                    throw new InvalidArgumentException('ips field must be an array');
+                if (!is_array($data['domainNames']))
+                    throw new InvalidArgumentException('domainNames field must be an array');
+                $perimeter = $this->perimeterService->create($data['domainNames'], $data['contactEmail'], $data['ips']);
+            } else {
+                return new JsonResponse(['error' =>'contactEmail, domainNames or ips have to be defined'], Response::HTTP_BAD_REQUEST);
+            }
+
         }
         catch(Exception $e) {
             return new JsonResponse($e->getMessage());

@@ -18,8 +18,6 @@ class Perimeter
     #[ORM\CustomIdGenerator(class:"Ramsey\Uuid\Doctrine\UuidGenerator")]
     private UuidInterface $id;
 
-    #[ORM\Column(length: 255)]
-    private ?string $domain_name;
 
     #[ORM\Column(length: 255)]
     private ?string $contact_mail;
@@ -30,13 +28,15 @@ class Perimeter
      #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Ip", cascade:["persist"])]
     private $ips;
 
-
+    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Domain", cascade:["persist"])]
+    private $domains;
      #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Vulnerability")]
     private $vulnerabilites;
 
     public function __construct()
     {
         $this->ips = new ArrayCollection();
+        $this->domains = new ArrayCollection();
         $this->vulnerabilites = new ArrayCollection();
     }
 
@@ -54,20 +54,25 @@ class Perimeter
     }
 
     /**
-     * @return string|null
+     * @return ArrayCollection
      */
-    public function getDomainName(): ?string
+    public function getDomains(): ArrayCollection
     {
-        return $this->domain_name;
+        return $this->domains;
     }
 
     /**
-     * @param string|null $domain_name
+     * @param ArrayCollection $domains
      */
-    public function setDomainName(?string $domain_name): void
+    public function setDomains(ArrayCollection $domains): void
     {
-        $this->domain_name = $domain_name;
+        $this->domains = $domains;
     }
+
+    /**
+     * @return string|null
+     */
+
 
     /**
      * @return string|null
@@ -144,6 +149,25 @@ class Perimeter
         return $this;
     }
 
+    public function addDomain(Domain $domain): self
+    {
+        if (!$this->domains->contains($domain)) {
+            $this->domains[] = $domain;
+            $domain->setPerimeter($this);
+        }
 
+        return $this;
+    }
+
+    public function removeDomain(Domain $domain): self
+    {
+        if ($this->domains->removeElement($domain)) {
+            if ($domain->getPerimeter() === $this) {
+                $domain->setPerimeter(null);
+            }
+        }
+
+        return $this;
+    }
 
 }

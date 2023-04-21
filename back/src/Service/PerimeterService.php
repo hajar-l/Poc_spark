@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Domain;
 use App\Entity\Ip;
 use App\Entity\Perimeter;
 use App\Repository\PerimeterRepository;
@@ -35,19 +36,16 @@ class PerimeterService
         return filter_var($ip, FILTER_VALIDATE_IP) !== false;
     }
 
-    public function create(?string $domain, ?string $email,  array $ips): Perimeter
+    public function create(array $domains, string $email,  array $ips): Perimeter
     {
         $entityManager = $this->doctrine->getManager();
 
-        if(!isset($domain) || !isset($email) || !isset($ips))
-            throw new InvalidArgumentException('domain name, email or ips cannot be empty');
-        if (!$this->isValidDomainName($domain) || !is_string($domain))
-            throw new InvalidArgumentException("Invalid domain name.");
+        if(!isset($domains) || !isset($email) || !isset($ips))
+            throw new InvalidArgumentException('domain names, email or ips cannot be empty');
         if (!$this->isValidEmail($email))
             throw new InvalidArgumentException("Invalid email.");
 
         $perimeter = new Perimeter();
-        $perimeter->setDomainName($domain);
         $perimeter->setContactMail($email);
         $perimeter->setCreatedAt(new DateTime());
 
@@ -60,7 +58,16 @@ class PerimeterService
             $ip->setIpAddress($ipAddress);
 
             $perimeter->addIp($ip);
+        }
 
+
+        foreach ($domains as $domain) {
+            if (!$this->isValidDomainName($domain) || !is_string($domain))
+                throw new InvalidArgumentException("Invalid domain name " . $domain);
+            $d = new Domain();
+            $d->setDomainName($domain);
+
+            $perimeter->addDomain($d);
         }
 
         $entityManager->persist($perimeter);

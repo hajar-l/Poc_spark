@@ -5,7 +5,9 @@ namespace App\Entity;
 use App\Repository\PerimeterRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\PersistentCollection;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
@@ -25,12 +27,13 @@ class Perimeter
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $created_at;
 
-     #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Ip", cascade:["persist"])]
+    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Ip", cascade:["persist"])]
     private $ips;
 
     #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Domain", cascade:["persist"])]
     private $domains;
-     #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Vulnerability")]
+
+    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Vulnerability")]
     private $vulnerabilites;
 
     public function __construct()
@@ -39,6 +42,8 @@ class Perimeter
         $this->domains = new ArrayCollection();
         $this->vulnerabilites = new ArrayCollection();
     }
+
+
 
     public function getId(): ?UuidInterface
     {
@@ -56,21 +61,13 @@ class Perimeter
     /**
      * @return ArrayCollection
      */
-    public function getDomains(): ArrayCollection
+    public function getDomains(): PersistentCollection
     {
         return $this->domains;
     }
 
     /**
      * @param ArrayCollection $domains
-     */
-    public function setDomains(ArrayCollection $domains): void
-    {
-        $this->domains = $domains;
-    }
-
-    /**
-     * @return string|null
      */
 
 
@@ -106,26 +103,22 @@ class Perimeter
         $this->created_at = $created_at;
     }
 
-    public function getIps(): ArrayCollection
+    public function getIps(): PersistentCollection
     {
         return $this->ips;
     }
 
-    public function setIps(ArrayCollection $ips): void
+    public function setIps(PersistentCollection $ips): void
     {
         $this->ips = $ips;
     }
 
 
-    public function getVulnerabilites(): Array
+    public function getVulnerabilites(): PersistentCollection
     {
         return $this->vulnerabilites;
     }
 
-    public function setVulnerabilites(Array $vulnerabilites): void
-    {
-        $this->vulnerabilites = $vulnerabilites;
-    }
 
 
     public function addIp(Ip $ip): self
@@ -169,5 +162,7 @@ class Perimeter
 
         return $this;
     }
+
+
 
 }

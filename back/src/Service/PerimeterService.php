@@ -33,37 +33,98 @@ class PerimeterService
             && preg_match("/^[^\.]{1,63}(\.[^\.]{1,63})*$/", $domain));
     }
     function isValidIp(string $ip): bool {
-        return filter_var($ip, FILTER_VALIDATE_IP) !== false;
+        // Separate IP and port
+        $parts = explode(':', $ip);
+        $ipPart = $parts[0];
+
+        // Check IP
+        if (filter_var($ipPart, FILTER_VALIDATE_IP) === false) {
+            return false;
+        }
+        // Check port range
+        if (count($parts) >= 2) {
+            $portPart = $parts[1];
+            if (str_contains($portPart, '-')) {
+                // Port range specified
+                list($minPort, $maxPort) = explode('-', $portPart);
+                if ($minPort < 1 || $maxPort > 65535 || $minPort > $maxPort) {
+                    return false;
+                }
+            } else {
+                // Single port specified
+                $port = (int)$portPart;
+                if ($port < 1 || $port > 65535) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
-    public function create(array $domains, string $email,  array $ips): Perimeter
+    public function create(array $domains, string $email, array $ips): Perimeter
     {
         $entityManager = $this->doctrine->getManager();
 
-        if(!isset($domains) || !isset($email) || !isset($ips))
+        if (!isset($domains) || !isset($email) || !isset($ips)) {
             throw new InvalidArgumentException('domain names, email or ips cannot be empty');
-        if (!$this->isValidEmail($email))
+        }
+        if (!$this->isValidEmail($email)) {
             throw new InvalidArgumentException("Invalid email.");
+        }
 
         $perimeter = new Perimeter();
         $perimeter->setContactMail($email);
         $perimeter->setCreatedAt(new DateTime());
 
         foreach ($ips as $ipAddress) {
-            if (!is_string($ipAddress))
+            if (!is_string($ipAddress)) {
                 throw new InvalidArgumentException("ip must be a string.");
-            if (!$this->isValidIp($ipAddress))
-                throw new InvalidArgumentException("Invalid ip " . $ipAddress);
-            $ip = new Ip();
-            $ip->setIpAddress($ipAddress);
-
-            $perimeter->addIp($ip);
+            }
+            // Check if the IP address contains a port range
+            if (str_contains($ipAddress, ":")) {
+                $parts = explode(':', $ipAddress);
+                $ip = $parts[0];
+                $portRange = null;
+                if (str_contains($parts[1], '-')) {
+                    $portRange = $parts[1];
+                }
+                if ($portRange) {
+                    [$start, $end] = explode("-", $portRange);
+                    // Add each IP address with the corresponding port to the database
+                    for ($i = $start; $i <= $end; $i++) {
+                        $ipWithPort = $ip . ":" . $i;
+                        if (!$this->isValidIp($ipWithPort)) {
+                            throw new InvalidArgumentException("Invalid ip " . $ipWithPort);
+                        }
+                        $ipObj = new Ip();
+                        $ipObj->setIpAddress($ipWithPort);
+                        $perimeter->addIp($ipObj);
+                    }
+                } else {
+                    // Single port specified
+                    if (!$this->isValidIp($ip.':' . $parts[1])) {
+                        throw new InvalidArgumentException("Invalid ip" . $ip . ':' . $parts[1]);
+                    }
+                    $ipObj = new Ip();
+                    $ipObj->setIpAddress($ip .':' . $parts[1]);
+                    $perimeter->addIp($ipObj);
+                }
+            } else {
+                // Add single IP address to the database
+                if (!$this->isValidIp($ipAddress)) {
+                    throw new InvalidArgumentException("Invalid ip " . $ipAddress);
+                }
+                $ipObj = new Ip();
+                $ipObj->setIpAddress($ipAddress);
+                $perimeter->addIp($ipObj);
+            }
         }
 
-
         foreach ($domains as $domain) {
-            if (!$this->isValidDomainName($domain) || !is_string($domain))
+            if (!$this->isValidDomainName($domain) || !is_string($domain)) {
                 throw new InvalidArgumentException("Invalid domain name " . $domain);
+            }
             $d = new Domain();
             $d->setDomainName($domain);
 
@@ -73,8 +134,8 @@ class PerimeterService
         $entityManager->persist($perimeter);
         $entityManager->flush();
 
-
         return $perimeter;
     }
+
 
 }

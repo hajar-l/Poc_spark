@@ -23,7 +23,7 @@ services:
   cron:
     build: ./cron
     volumes:
-      - ../my-container/scripts:/var/www
+      - ../back/scripts:/var/www
       - ./log/cron:/var/log/cron
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}

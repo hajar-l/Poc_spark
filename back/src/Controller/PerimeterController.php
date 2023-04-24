@@ -17,6 +17,8 @@ use Symfony\Component\Routing\Annotation\Route;
 class PerimeterController extends AbstractController
 {
 
+
+
     private PerimeterService $perimeterService;
 
 
@@ -43,9 +45,20 @@ class PerimeterController extends AbstractController
 
         $data = [];
         foreach ($perimeters as $perimeter) {
+            $ips = [];
+            foreach ($perimeter->getIps() as $ip) {
+                $ips[] = $ip->getIpAddress();
+            }
+
+            $domains = [];
+            foreach ($perimeter->getDomains() as $domain) {
+                $domains[] = $domain->getDomainName();
+            }
+
             $data[] = [
                 'id' => $perimeter->getId()->toString(),
-                'domain_name' => $perimeter->getDomainName(),
+                'domains' => $domains,
+                'ips' => $ips,
                 'contact_mail' => $perimeter->getContactMail(),
                 'created_at' => $perimeter->getCreatedAt()?->format(DateTimeInterface::ATOM),
             ];
@@ -61,18 +74,36 @@ class PerimeterController extends AbstractController
 
 
 
+
     #[Route('/perimeter/{id}', name: 'perimeter_show', methods: ['GET'])]
-    public function show(Perimeter $perimeter): JsonResponse
+    public function show(Perimeter $perimeter = null): JsonResponse
     {
+        if ($perimeter === null) {
+            return new JsonResponse(['error' => 'Perimeter not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $ips = [];
+        foreach ($perimeter->getIps() as $ip) {
+            $ips[] = $ip->getIpAddress();
+        }
+
+        $domains = [];
+        foreach ($perimeter->getDomains() as $domain) {
+            $domains[] = $domain->getDomainName();
+        }
+
         $data = [
             'id' => $perimeter->getId()->toString(),
-            'domain_name' => $perimeter->getDomainName(),
+            'domains' => $domains,
+            'ips' => $ips,
             'contact_mail' => $perimeter->getContactMail(),
             'created_at' => $perimeter->getCreatedAt()?->format(DateTimeInterface::ATOM),
         ];
 
         return new JsonResponse($data);
     }
+
+
 
     #[Route('/perimeter', name: 'perimeter_create', methods: ['POST'])]
     public function create(Request $request): JsonResponse

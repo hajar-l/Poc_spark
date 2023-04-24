@@ -1,1 +1,1 @@
-*/5 * * * * php /var/www/test.php
+*/25 * * * * php /var/www/test.php

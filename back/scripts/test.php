@@ -1,5 +1,9 @@
 <?php
 
+echo "STARTING ... \n";
+
+
+
 $host = 'db'; // nom de l'hôte
 $dbname = getenv('MYSQL_DATABASE'); // nom de la base de données
 $username = 'root'; // nom d'utilisateur de la base de données
@@ -14,63 +18,88 @@ try {
 }
 
 // Exécution d'une requête SQL pour récupérer les données de la table "Perimeter"
-$sql = "SELECT * FROM perimeter";
+$sql = "SELECT id FROM perimeter";
 $stmt = $pdo->query($sql);
 
 // Récupération des données sous forme de tableau associatif
 $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+
+
 // Parcourir les données et traiter chaque domaine
 foreach ($data as $row) {
-    echo "----- Working on id :  " . $row['id']  . " domain_name : " .  $row['domain_name'] . " now ...  -------\n";
-    $output = shell_exec("echo '" . $row['domain_name'] . "' | nuclei -silent -j -u  -");
-    if (isset($output)) {
-        $output = str_replace("\n", ',',$output);
-        $output = substr_replace($output, "", -1, 1);
-        $output = "[" . $output . "]";
 
-        $vulnerabilities = json_decode($output);
-        foreach ($vulnerabilities as $vulnerability) {
-            // Vérifier si la vulnérabilité existe déjà dans la base de données
-            $template = ;
-            $description =;
-            $name = $vulnerability->info->name;
-            $reference =;
-            $severity=;
-            $matched_at=;
-            $timestamp=;
-            $ip=;
-            $query = "SELECT COUNT(*) as count FROM vulnerabilities WHERE name = :name AND perimeter_id = :perimeter_id";
-            $stmt = $pdo->prepare($query);
-            $stmt->execute(['name' => $name, 'perimeter_id' => $row['id']]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($result['count'] == 0) {
-                // La vulnérabilité n'existe pas encore, donc on l'insère dans la base de données
-                $query = "INSERT INTO vulnerabilities (id, perimeter_id, template, description, name, reference, 
-                             severity, matched_at, timestamp, ip, is_solved, is_visible, is_new) 
-                          VALUES (:id, :perimeter_id, :template, :description, :name, :reference, 
-                             :severity, :matched_at, :timestamp, :ip, :is_solved, :is_visible, :is_new)";
-                $stmt = $pdo->prepare($query);
-                $stmt->execute([
-                    'id' => guidv4(),
-                    'perimeter_id' => $row['id'],
-                    'template' => $template,
-                    'description' => $description,
-                    'name' => $name,
-                    'reference' => $reference,
-                    'severity' => $severity,
-                    'matched_at' => $matched_at,
-                    'timestamp' => $timestamp,
-                    'ip' => $ip,
-                    'is_solved' => true,
-                    'is_visible' => true,
-                    'is_new' => false,
-                ]);
+    $perimeter_id = $row["id"];
+    $sql2 = "SELECT * FROM domain WHERE perimeter_id = '" . $perimeter_id . "'";
+    $result2 = $pdo->query($sql2);
+    while ($row2 = $result2->fetch(PDO::FETCH_ASSOC)) {
+        echo "----- Working on id :  " . $row['id'] . " domain_name : " . $row2['domain_name'] . " now  -------\n";
+        $output = shell_exec("echo '" . $row2['domain_name'] . "' | nuclei -silent -j -u  -");
+        if (isset($output)) {
+            $output = str_replace("\n", ',', $output);
+            $output = substr_replace($output, "", -1, 1);
+            $output = "[" . $output . "]";
+//            $output = addslashes($output);
+            $filename = "file" .guidv4() . ".json";
+            if (file_put_contents("/var/www/" . $filename, $output) !== false) {
+                echo $filename . " created.\n";
+            } else {
+                echo "could not create file .";
             }
+
+            //$cmd = "echo " . $output . " >> /var/www/" . $filename;
+//            $cmd = "echo " . $output;
+//            echo shell_exec($cmd);
+            //echo "created " . $filename. "\n";
+            //$vulnerabilities = json_decode($output);
         }
+
+
+//        foreach ($vulnerabilities as $vulnerability) {
+        // Vérifier si la vulnérabilité existe déjà dans la base de données
+//            $template = ;
+//            $description =;
+//            $name = $vulnerability->info->name;
+//            $reference =;
+//            $severity=;
+//            $matched_at=;
+//            $timestamp=;
+//            $ip=;
+//            $query = "SELECT COUNT(*) as count FROM vulnerabilities WHERE name = :name AND perimeter_id = :perimeter_id";
+//            $stmt = $pdo->prepare($query);
+//            $stmt->execute(['name' => $name, 'perimeter_id' => $row['id']]);
+//            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+//
+//            if ($result['count'] == 0) {
+//                // La vulnérabilité n'existe pas encore, donc on l'insère dans la base de données
+//                $query = "INSERT INTO vulnerabilities (id, perimeter_id, template, description, name, reference,
+//                             severity, matched_at, timestamp, ip, is_solved, is_visible, is_new)
+//                          VALUES (:id, :perimeter_id, :template, :description, :name, :reference,
+//                             :severity, :matched_at, :timestamp, :ip, :is_solved, :is_visible, :is_new)";
+//                $stmt = $pdo->prepare($query);
+//                $stmt->execute([
+//                    'id' => guidv4(),
+//                    'perimeter_id' => $row['id'],
+//                    'template' => $template,
+//                    'description' => $description,
+//                    'name' => $name,
+//                    'reference' => $reference,
+//                    'severity' => $severity,
+//                    'matched_at' => $matched_at,
+//                    'timestamp' => $timestamp,
+//                    'ip' => $ip,
+//                    'is_solved' => true,
+//                    'is_visible' => true,
+//                    'is_new' => false,
+//                ]);
+//            }
+//        }
     }
 }
+// Fermeture de la connexion à la base de données
+$pdo = null;
+
+echo "DONE FOR NOW ... \n";
 
 function guidv4($data = null) {
     // Generate 16 bytes (128 bits) of random data or use the data passed into the function.
@@ -86,5 +115,5 @@ function guidv4($data = null) {
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
 
-// Fermeture de la connexion à la base de données
-$pdo = null;
+
+

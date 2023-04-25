@@ -33,17 +33,19 @@ class Perimeter
     #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Domain", cascade:["persist"])]
     private $domains;
 
-    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Vulnerability")]
+    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Vulnerability", cascade:["persist"])]
     private $vulnerabilites;
+
+    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\BannedIp", cascade:["persist"])]
+    private $bannedIps;
 
     public function __construct()
     {
         $this->ips = new ArrayCollection();
         $this->domains = new ArrayCollection();
         $this->vulnerabilites = new ArrayCollection();
+        $this->bannedIps = new ArrayCollection();
     }
-
-
 
     public function getId(): ?UuidInterface
     {
@@ -163,6 +165,41 @@ class Perimeter
         return $this;
     }
 
+    /**
+     * @return ArrayCollection
+     */
+    public function getBannedIps(): PersistentCollection
+    {
+        return $this->bannedIps;
+    }
 
+    /**
+     * @param ArrayCollection $bannedIps
+     */
+    public function setBannedIps(PersistentCollection $bannedIps): void
+    {
+        $this->bannedIps = $bannedIps;
+    }
+
+    public function addBannedIp(BannedIp $ip): self
+    {
+        if (!$this->bannedIps->contains($ip)) {
+            $this->bannedIps[] = $ip;
+            $ip->setPerimeter($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBannedIp(BannedIp $ip): self
+    {
+        if ($this->bannedIps->removeElement($ip)) {
+            if ($ip->getPerimeter() === $this) {
+                $ip->setPerimeter(null);
+            }
+        }
+
+        return $this;
+    }
 
 }

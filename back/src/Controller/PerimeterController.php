@@ -55,10 +55,16 @@ class PerimeterController extends AbstractController
                 $domains[] = $domain->getDomainName();
             }
 
+            $bannedIps = [];
+            foreach ($perimeter->getBannedIps() as $ip) {
+                $bannedIps[] = $ip->getIpAddress();
+            }
+
             $data[] = [
                 'id' => $perimeter->getId()->toString(),
                 'domains' => $domains,
                 'ips' => $ips,
+                'bannedIps' => $bannedIps,
                 'contact_mail' => $perimeter->getContactMail(),
                 'created_at' => $perimeter->getCreatedAt()?->format(DateTimeInterface::ATOM),
             ];
@@ -92,10 +98,16 @@ class PerimeterController extends AbstractController
             $domains[] = $domain->getDomainName();
         }
 
+        $bannedIps = [];
+        foreach ($perimeter->getBannedIps() as $ip) {
+            $bannedIps[] = $ip->getIpAddress();
+        }
+
         $data = [
             'id' => $perimeter->getId()->toString(),
             'domains' => $domains,
             'ips' => $ips,
+            'bannedIps' => $bannedIps,
             'contact_mail' => $perimeter->getContactMail(),
             'created_at' => $perimeter->getCreatedAt()?->format(DateTimeInterface::ATOM),
         ];
@@ -110,14 +122,17 @@ class PerimeterController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         try {
-            if(isset($data['contactEmail']) && isset($data['domainNames']) && isset($data['ips'])) {
+            if(isset($data['contactEmail']) && isset($data['domainNames']) && isset($data['ips']) && isset($data['bannedIps'])) {
                 if (!is_array($data['ips']))
                     throw new InvalidArgumentException('ips field must be an array');
                 if (!is_array($data['domainNames']))
                     throw new InvalidArgumentException('domainNames field must be an array');
-                $perimeter = $this->perimeterService->create($data['domainNames'], $data['contactEmail'], $data['ips']);
+                if (!is_array($data['bannedIps']))
+                    throw new InvalidArgumentException('bannedIps field must be an array');
+                $perimeter = $this->perimeterService->create($data['domainNames'], $data['contactEmail'], $data['ips'],
+                    $data['bannedIps']);
             } else {
-                return new JsonResponse(['error' =>'contactEmail, domainNames or ips have to be defined'], Response::HTTP_BAD_REQUEST);
+                return new JsonResponse(['error' =>'contactEmail, domainNames, ips or bannedIps have to be defined'], Response::HTTP_BAD_REQUEST);
             }
 
         }
@@ -125,6 +140,6 @@ class PerimeterController extends AbstractController
             return new JsonResponse($e->getMessage());
         }
 
-        return new JsonResponse($perimeter);
+        return new JsonResponse(['message' =>'Perimeter successfully created']);
     }
 }

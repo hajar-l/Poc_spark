@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\BannedIp;
 use App\Entity\Domain;
 use App\Entity\Ip;
 use App\Entity\Perimeter;
@@ -62,12 +63,12 @@ class PerimeterService
         return true;
     }
 
-    public function create(array $domains, string $email, array $ips): Perimeter
+    public function create(array $domains, string $email, array $ips, array $bannedIps): Perimeter
     {
         $entityManager = $this->doctrine->getManager();
 
-        if (!isset($domains) || !isset($email) || !isset($ips)) {
-            throw new InvalidArgumentException('domain names, email or ips cannot be empty');
+        if (!isset($domains) || !isset($email) || !isset($ips) || !isset($bannedIps)) {
+            throw new InvalidArgumentException('domain names, email, ips or bannedIps cannot be empty');
         }
         if (!$this->isValidEmail($email)) {
             throw new InvalidArgumentException("Invalid email.");
@@ -118,6 +119,50 @@ class PerimeterService
                 $ipObj = new Ip();
                 $ipObj->setIpAddress($ipAddress);
                 $perimeter->addIp($ipObj);
+            }
+        }
+
+        foreach ($bannedIps as $ipAddress) {
+            if (!is_string($ipAddress)) {
+                throw new InvalidArgumentException("ip must be a string.");
+            }
+            // Check if the IP address contains a port range
+            if (str_contains($ipAddress, ":")) {
+                $parts = explode(':', $ipAddress);
+                $ip = $parts[0];
+                $portRange = null;
+                if (str_contains($parts[1], '-')) {
+                    $portRange = $parts[1];
+                }
+                if ($portRange) {
+                    [$start, $end] = explode("-", $portRange);
+                    // Add each IP address with the corresponding port to the database
+                    for ($i = $start; $i <= $end; $i++) {
+                        $ipWithPort = $ip . ":" . $i;
+                        if (!$this->isValidIp($ipWithPort)) {
+                            throw new InvalidArgumentException("Invalid ip " . $ipWithPort);
+                        }
+                        $ipObj = new BannedIp();
+                        $ipObj->setIpAddress($ipWithPort);
+                        $perimeter->addBannedIp($ipObj);
+                    }
+                } else {
+                    // Single port specified
+                    if (!$this->isValidIp($ip.':' . $parts[1])) {
+                        throw new InvalidArgumentException("Invalid ip" . $ip . ':' . $parts[1]);
+                    }
+                    $ipObj = new BannedIp();
+                    $ipObj->setIpAddress($ip .':' . $parts[1]);
+                    $perimeter->addBannedIp($ipObj);
+                }
+            } else {
+                // Add single IP address to the database
+                if (!$this->isValidIp($ipAddress)) {
+                    throw new InvalidArgumentException("Invalid ip " . $ipAddress);
+                }
+                $ipObj = new BannedIp();
+                $ipObj->setIpAddress($ipAddress);
+                $perimeter->addBannedIp($ipObj);
             }
         }
 

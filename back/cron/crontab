@@ -1,1 +1,1 @@
-*/25 * * * * php /var/www/test.php
+0 15 * * * php /var/www/test.php

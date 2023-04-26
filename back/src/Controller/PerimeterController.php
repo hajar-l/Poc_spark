@@ -134,12 +134,10 @@ class PerimeterController extends AbstractController
             } else {
                 return new JsonResponse(['error' =>'contactEmail, domainNames, ips or bannedIps have to be defined'], Response::HTTP_BAD_REQUEST);
             }
-
         }
         catch(Exception $e) {
-            return new JsonResponse($e->getMessage());
+            return new JsonResponse($e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
-
-        return new JsonResponse(['message' =>'Perimeter successfully created']);
+        return new JsonResponse(['message' =>'Perimeter successfully created'], Response::HTTP_CREATED);
     }
 }

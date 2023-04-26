@@ -1,7 +1,9 @@
 import React from 'react';
 import './DefinitionParam.css';
 import logoattineos from './logoattineos.png';
-import { v4 as uuidv4 } from 'uuid';
+import {View,  TextInput} from 'react-native';
+
+
 
 
 export default class DefinitionParam extends React.Component{
@@ -22,10 +24,11 @@ export default class DefinitionParam extends React.Component{
         this.setState({ [name]: value });
       }
     };
+    
 
     onSubmit= async (e) =>{
         e.preventDefault();
-        console.log(this.state)
+        console.log(this.state);
 
     const payload = {
        
@@ -49,11 +52,14 @@ export default class DefinitionParam extends React.Component{
   
         if (response.ok) {
           console.log('Enregistrement fait avec succés.');
+          alert("Enregistrement fait avec succés.");
         } else {
           console.error("Erreur d'enregistrement.");
+          alert("Erreur d'enregistrement.");
         }
       } catch (error) {
         console.error(error);
+        alert("Une erreur s'est produite lors de l'enregistrement.");
       }
     };
 
@@ -68,7 +74,7 @@ export default class DefinitionParam extends React.Component{
                     {/*domainNames Field*/}
                     <div className="mb-4">
                         <label htmlFor="domainNames" className="block font-bold mb-2">Nom du domaine</label>
-                        <input 
+                        <input
                         type="text"
                         id="domainNames"
                         name="domainNames"
@@ -76,6 +82,8 @@ export default class DefinitionParam extends React.Component{
                         placeholder="Nom du domaine" 
                         value={this.state.domainNames} 
                         onChange={(e)  => this.change(e)}
+                        wrap="hard"
+
                         />
                 </div>
                

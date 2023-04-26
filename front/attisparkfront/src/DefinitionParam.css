@@ -21,7 +21,8 @@
   img {
     height: 25px;
     width: auto;
-    margin-top: 2.5%;
+    margin-top: 1.5%;
+    margin-left: 0.5%;
   }
   
   label {
@@ -67,3 +68,5 @@
   body{
     background-color: whitesmoke;
   }
+
+  

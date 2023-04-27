@@ -1,8 +1,7 @@
 import React from 'react';
 import './DefinitionParam.css';
 import logoattineos from './logoattineos.png';
-import {View,  TextInput} from 'react-native';
-
+import { TextField } from '@mui/material';
 
 
 
@@ -17,8 +16,8 @@ export default class DefinitionParam extends React.Component{
 
     change = e=>{
       const { name, value } = e.target;
-      if (name === "ips" || name === "bannedIps" || name=="domainNames") {
-        const arr = value.split(",").map(item => item.trim());
+      if (name === "ips" || name === "bannedIps" || name==="domainNames") {
+        const arr = value.split([","]).map(item => item.trim()) ;
         this.setState({ [name]: arr });
       } else {
         this.setState({ [name]: value });
@@ -56,7 +55,7 @@ export default class DefinitionParam extends React.Component{
         } else {
           console.error("Erreur d'enregistrement.");
           alert("Erreur d'enregistrement.");
-        }
+        } 
       } catch (error) {
         console.error(error);
         alert("Une erreur s'est produite lors de l'enregistrement.");
@@ -74,7 +73,9 @@ export default class DefinitionParam extends React.Component{
                     {/*domainNames Field*/}
                     <div className="mb-4">
                         <label htmlFor="domainNames" className="block font-bold mb-2">Nom du domaine</label>
-                        <input
+                        <input  
+                        //error={this.state.domainNames.length === 0}
+                        //helperText={!this.state.domainNames.length ? 'domain name is required' : ''}
                         type="text"
                         id="domainNames"
                         name="domainNames"
@@ -82,7 +83,7 @@ export default class DefinitionParam extends React.Component{
                         placeholder="Nom du domaine" 
                         value={this.state.domainNames} 
                         onChange={(e)  => this.change(e)}
-                        wrap="hard"
+                       
 
                         />
                 </div>
@@ -144,3 +145,4 @@ export default class DefinitionParam extends React.Component{
 
 
 }
+

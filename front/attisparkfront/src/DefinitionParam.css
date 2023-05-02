@@ -52,9 +52,7 @@
   }
   button:hover {
     box-shadow: 8px 8px #ffc299;
-    transition: .3s;
-    
-    
+    transition: .3s; 
   }
   
   
@@ -67,6 +65,18 @@
   
   body{
     background-color: whitesmoke;
+  }
+
+  .success-message {
+    background-color: #d1f5d1;
+    border: 1px solid #0e8e0e;
+    padding: 10px;
+  }
+  
+  .error-message {
+    background-color: #f8d1d1;
+    border: 1px solid #ff0000;
+    padding: 10px;
   }
 
   

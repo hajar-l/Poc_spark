@@ -1,8 +1,7 @@
 import React from 'react';
 import './DefinitionParam.css';
 import logoattineos from './logoattineos.png';
-import { TextField } from '@mui/material';
-
+import TextField from '@mui/material/TextField';
 
 
 export default class DefinitionParam extends React.Component{
@@ -11,6 +10,8 @@ export default class DefinitionParam extends React.Component{
         ips: [],
         bannedIps: [],
         contactEmail: "",
+        confirmationMessage: "",
+        ErrorMessage:"",
         
     };
 
@@ -51,10 +52,10 @@ export default class DefinitionParam extends React.Component{
   
         if (response.ok) {
           console.log('Enregistrement fait avec succés.');
-          alert("Enregistrement fait avec succés.");
+          this.setState({ confirmationMessage: "Enregistrement fait avec succès." });
         } else {
           console.error("Erreur d'enregistrement.");
-          alert("Erreur d'enregistrement.");
+          this.setState({ ErrorMessage: "Veuillez vérifier les informations saisies." });
         } 
       } catch (error) {
         console.error(error);
@@ -133,6 +134,8 @@ export default class DefinitionParam extends React.Component{
                 <div className="mb-4">
                 <button type="submit" onClick={(e) => this.onSubmit(e)}>Enregsitrer</button>
                 </div>
+                {this.state.confirmationMessage && <p className="success-message">{this.state.confirmationMessage}</p>}
+                {this.state.ErrorMessage && <p className="error-message">{this.state.ErrorMessage}</p>}
             </form>
         </div>
     </div>

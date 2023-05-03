@@ -17,6 +17,8 @@ export default class DefinitionParam extends React.Component{
         confirmationMessage: "",
         ErrorMessage:"",
         review: false,
+        successMessageDisplay: false,
+        errorMessageDisplay: false,
         
     };
 
@@ -57,17 +59,21 @@ export default class DefinitionParam extends React.Component{
   
         if (response.ok) {
           console.log('Enregistrement fait avec succés.');
-          this.setState({ confirmationMessage: "Enregistrement fait avec succès." });
-          
+          this.setState({ confirmationMessage: "Enregistrement fait avec succès.", successMessageDisplay: true });
+          setTimeout(() => {
+            this.setState({ successMessageDisplay: false });
+        }, 3000);
         } else {
           console.error("Erreur d'enregistrement.");
-          this.setState({ ErrorMessage: "Veuillez vérifier les informations saisies." });
+          this.setState({ ErrorMessage: "Veuillez vérifier les informations saisies." ,errorMessageDisplay: true });
+          setTimeout(() => {
+            this.setState({ errorMessageDisplay: false });
+        }, 3000); 
         } 
       } catch (error) {
         console.error(error);
         alert("Une erreur s'est produite lors de l'enregistrement.");
       }
-
     };
     handleReviewClick = () => {
       this.setState({ review: true });
@@ -147,7 +153,7 @@ export default class DefinitionParam extends React.Component{
                     />
                 </div>
 
-                <button variant="contained" onClick={this.handleReviewClick}>Vérifier</button>
+                <button variant="contained" onMouseDown={this.handleReviewClick}>Vérifier</button>
                 <Dialog open={this.state.review} onClose={this.handleReviewClose}>
                 <DialogTitle>Veuillez vérifier vos informations avant de soumettre</DialogTitle>
                 <DialogContent>
@@ -167,13 +173,15 @@ export default class DefinitionParam extends React.Component{
                   </ul>
                 </DialogContent>
                 <DialogActions><button onClick={this.handleReviewClose}>Annuler</button>
-                               <button type="submit" variant="contained" onClick={(e) => {this.onSubmit(e);this.handleReviewClose()}}>Soumettre</button>
+                               <button type="submit" variant="contained" onClick={(e) => this.onSubmit(e)}>Soumettre</button>
+      
                 </DialogActions>
+                {this.state.successMessageDisplay && <p className="success-message">{this.state.confirmationMessage}</p>}
+                {this.state.errorMessageDisplay && <p className="error-message">{this.state.ErrorMessage}</p>}
                 </Dialog>
                 {/* Submit button */}
                 
-                {this.state.confirmationMessage && <p className="success-message">{this.state.confirmationMessage}</p>}
-                {this.state.ErrorMessage && <p className="error-message">{this.state.ErrorMessage}</p>}
+                
             </form>
         </div>
     </div>

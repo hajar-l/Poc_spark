@@ -2,7 +2,11 @@ import React from 'react';
 import './DefinitionParam.css';
 import logoattineos from './logoattineos.png';
 import TextField from '@mui/material/TextField';
-
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 
 export default class DefinitionParam extends React.Component{
     state={
@@ -12,6 +16,7 @@ export default class DefinitionParam extends React.Component{
         contactEmail: "",
         confirmationMessage: "",
         ErrorMessage:"",
+        review: false,
         
     };
 
@@ -53,6 +58,7 @@ export default class DefinitionParam extends React.Component{
         if (response.ok) {
           console.log('Enregistrement fait avec succés.');
           this.setState({ confirmationMessage: "Enregistrement fait avec succès." });
+          
         } else {
           console.error("Erreur d'enregistrement.");
           this.setState({ ErrorMessage: "Veuillez vérifier les informations saisies." });
@@ -61,6 +67,14 @@ export default class DefinitionParam extends React.Component{
         console.error(error);
         alert("Une erreur s'est produite lors de l'enregistrement.");
       }
+
+    };
+    handleReviewClick = () => {
+      this.setState({ review: true });
+    };
+  
+    handleReviewClose = () => {
+      this.setState({ review: false });
     };
 
     render(){
@@ -84,7 +98,7 @@ export default class DefinitionParam extends React.Component{
                         placeholder="Nom du domaine" 
                         value={this.state.domainNames} 
                         onChange={(e)  => this.change(e)}
-                       
+                        required
 
                         />
                 </div>
@@ -100,6 +114,7 @@ export default class DefinitionParam extends React.Component{
                     placeholder="Adresses IP" 
                     value={this.state.ips} 
                     onChange={(e)  => this.change(e) }
+                    required
                     />
                 </div>
                   {/* Adresse IP à exclure Field*/}
@@ -113,6 +128,7 @@ export default class DefinitionParam extends React.Component{
                     placeholder="Adresse IP à exclure " 
                     value={this.state.bannedIps} 
                     onChange={(e)  => this.change(e) }
+                    required
                     />
                 </div>
 
@@ -127,13 +143,35 @@ export default class DefinitionParam extends React.Component{
                     placeholder="Mail de contact" 
                     value={this.state.contactEmail} 
                     onChange={(e)  => this.change(e) }
+                    required
                     />
                 </div>
-                
+
+                <button variant="contained" onClick={this.handleReviewClick}>Vérifier</button>
+                <Dialog open={this.state.review} onClose={this.handleReviewClose}>
+                <DialogTitle>Veuillez vérifier vos informations avant de soumettre</DialogTitle>
+                <DialogContent>
+                  <ul>
+                  <li>
+                  <span className="font-bold">Nom du domaine:</span> {this.state.domainNames.join(', ')}
+                  </li>
+                  <li>
+                  <span className="font-bold">Adresses IP:</span> {this.state.ips.join(', ')}
+                  </li>
+                  <li>
+                  <span className="font-bold">Adresses IP bannies:</span> {this.state.bannedIps.join(', ')}
+                  </li>
+                  <li>
+                  <span className="font-bold">Email de contact:</span> {this.state.contactEmail}
+                  </li>
+                  </ul>
+                </DialogContent>
+                <DialogActions><button onClick={this.handleReviewClose}>Annuler</button>
+                               <button type="submit" variant="contained" onClick={(e) => {this.onSubmit(e);this.handleReviewClose()}}>Soumettre</button>
+                </DialogActions>
+                </Dialog>
                 {/* Submit button */}
-                <div className="mb-4">
-                <button type="submit" onClick={(e) => this.onSubmit(e)}>Enregsitrer</button>
-                </div>
+                
                 {this.state.confirmationMessage && <p className="success-message">{this.state.confirmationMessage}</p>}
                 {this.state.ErrorMessage && <p className="error-message">{this.state.ErrorMessage}</p>}
             </form>

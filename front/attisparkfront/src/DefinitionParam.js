@@ -62,13 +62,13 @@ export default class DefinitionParam extends React.Component{
           this.setState({ confirmationMessage: "Enregistrement fait avec succès.", successMessageDisplay: true });
           setTimeout(() => {
             this.setState({ successMessageDisplay: false });
-        }, 3000);
+        }, 5000);
         } else {
           console.error("Erreur d'enregistrement.");
           this.setState({ ErrorMessage: "Veuillez vérifier les informations saisies." ,errorMessageDisplay: true });
           setTimeout(() => {
             this.setState({ errorMessageDisplay: false });
-        }, 3000); 
+        }, 5000); 
         } 
       } catch (error) {
         console.error(error);
@@ -134,7 +134,7 @@ export default class DefinitionParam extends React.Component{
                     placeholder="Adresse IP à exclure " 
                     value={this.state.bannedIps} 
                     onChange={(e)  => this.change(e) }
-                    required
+                    
                     />
                 </div>
 
@@ -160,19 +160,23 @@ export default class DefinitionParam extends React.Component{
                   <ul>
                   <li>
                   <span className="font-bold">Nom du domaine:</span> {this.state.domainNames.join(', ')}
+                  {this.state.domainNames.length === 0 && <div className="waringmessage">Le champ Nom du domaine est obligatoire.</div>}
                   </li>
                   <li>
                   <span className="font-bold">Adresses IP:</span> {this.state.ips.join(', ')}
+                  {this.state.ips.length === 0 && <div className="waringmessage">Le champ Adresses IP  est obligatoire.</div>}
                   </li>
                   <li>
-                  <span className="font-bold">Adresses IP bannies:</span> {this.state.bannedIps.join(', ')}
+                  <span className="font-bold">Adresses IP exclues:</span> {this.state.bannedIps.join(', ')}
+                  {this.state.bannedIps.length === 0 && <div className="infomessage">Aucune Adresse ip n'est exclue du traitement.</div>}
                   </li>
                   <li>
                   <span className="font-bold">Email de contact:</span> {this.state.contactEmail}
+                  {this.state.contactEmail === '' && <div className="waringmessage">Le champ Email de contact est obligatoire.</div>}
                   </li>
                   </ul>
                 </DialogContent>
-                <DialogActions><button onClick={this.handleReviewClose}>Annuler</button>
+                <DialogActions><button onClick={this.handleReviewClose}>Retour</button>
                                <button type="submit" variant="contained" onClick={(e) => this.onSubmit(e)}>Soumettre</button>
       
                 </DialogActions>

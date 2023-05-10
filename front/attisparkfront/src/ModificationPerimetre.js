@@ -1,114 +1,87 @@
 import React from 'react';
+import './DefinitionParam.css';
+import logoattineos from './logoattineos.png';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 
-export default class ModificationPerimetre extends React.Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        domainNames: [],
-        ips: [],
-        bannedIps: [],
-        contactEmail: "",
-        confirmationMessage: "",
-        ErrorMessage:"",
-        review: false,
-        successMessageDisplay: false,
-        errorMessageDisplay: false,
-        isDisabled: false,
-      };
-    }
-  
-    async componentDidMount() {
-        try {
-          const response = await fetch('https://127.0.0.1:8001/perimeter/${this.props.match.params.id}');
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          const data = await response.json();
-          this.setState({
-            domainNames: data.domainNames.join(", "),
-            ips: data.ips.join(", "),
-            bannedIps: data.bannedIps.join(", "),
-            contactEmail: data.contactEmail,
-          });
-        } catch (error) {
-          console.error(error);
-          
-        }
-      }
-  
-    render() {
-      return (
-        <div>
-          <h1>Modification d'un périmètre</h1>
-          <form onSubmit={this.onSubmit}>
-          <label htmlFor="domainNames">Noms de domaine :</label>
-          <input type="text" name="domainNames" value={this.state.domainNames} onChange={this.change} />
+export default class DefinitionParam extends React.Component{
+  state = {
+    domainNames: [],
+    ips: [],
+    bannedIps: [],
+    contactEmail: '',
+  };
 
-          <label htmlFor="ips">Adresses IP :</label>
-          <input type="text" name="ips" value={this.state.ips} onChange={this.change} />
+  handleChange = (e) => {
+    const { name, value } = e.target;
+    this.setState({ [name]: value });
+  };
 
-          <label htmlFor="bannedIps">Adresses IP à exclure :</label>
-          <input type="text" name="bannedIps" value={this.state.bannedIps} onChange={this.change} />
+  handleSubmit = (e) => {
+    e.preventDefault();
+    // Effectuez ici les actions nécessaires pour enregistrer les modifications
+    // Utilisez this.state pour accéder aux valeurs des champs modifiés
+    console.log(this.state);
+  };
 
-          <label htmlFor="contactEmail">Mail de contact :</label>
-          <input type="email" name="contactEmail" value={this.state.contactEmail} onChange={this.change} />
+  render() {
+    return (
+      <div>
+        <h1>Modification des paramètres du périmètre</h1>
+        <form onSubmit={this.handleSubmit}>
+          {/* Champ "Nom du domaine" */}
+          <div>
+            <label htmlFor="domainNames">Nom du domaine :</label>
+            <input
+              type="text"
+              id="domainNames"
+              name="domainNames"
+              value={this.state.domainNames}
+              onChange={this.handleChange}
+            />
+          </div>
 
-          <button type="submit">Modifier</button>
+          {/* Champ "Adresses IP" */}
+          <div>
+            <label htmlFor="ips">Adresses IP :</label>
+            <textarea
+              id="ips"
+              name="ips"
+              value={this.state.ips}
+              onChange={this.handleChange}
+            ></textarea>
+          </div>
+
+          {/* Champ "Adresses IP exclues" */}
+          <div>
+            <label htmlFor="bannedIps">Adresses IP exclues :</label>
+            <textarea
+              id="bannedIps"
+              name="bannedIps"
+              value={this.state.bannedIps}
+              onChange={this.handleChange}
+            ></textarea>
+          </div>
+
+          {/* Champ "Mail de contact" */}
+          <div>
+            <label htmlFor="contactEmail">Mail de contact :</label>
+            <input
+              type="text"
+              id="contactEmail"
+              name="contactEmail"
+              value={this.state.contactEmail}
+              onChange={this.handleChange}
+            />
+          </div>
+
+          {/* Bouton de soumission */}
+          <button type="submit">Enregistrer les modifications</button>
         </form>
-        {this.state.successMessageDisplay && <p>{this.state.confirmationMessage}</p>}
-        {this.state.errorMessageDisplay && <p>{this.state.errorMessage}</p>}
-        </div>
-      );
-    }
-  
-    change = e => {
-      const { name, value } = e.target;
-      if (name === "ips" || name === "bannedIps" || name==="domainNames") {
-        const arr = value.split([","]).map(item => item.trim()) ;
-        this.setState({ [name]: arr });
-      } else {
-        this.setState({ [name]: value });
-      }
-    };
-  
-    onSubmit = async e => {
-      e.preventDefault();
-      console.log(this.state);
-  
-      const payload = {
-        domainNames: this.state.domainNames,
-        ips: this.state.ips,
-        bannedIps: this.state.bannedIps,
-        contactEmail: this.state.contactEmail
-      };
-  
-      console.log('request payload',payload);
-  
-      try {
-        const response = await fetch('https://127.0.0.1:8001/perimeter/${this.props.match.params.id}', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-  
-        if (response.ok) {
-          console.log('Enregistrement fait avec succés.');
-          this.setState({ confirmationMessage: "Enregistrement fait avec succès.", successMessageDisplay: true });
-          setTimeout(() => {
-            this.setState({ successMessageDisplay: false });
-          }, 5000);
-        } else {
-          console.error("Erreur d'enregistrement.");
-          this.setState({ ErrorMessage: "Veuillez vérifier les informations saisies." ,errorMessageDisplay: true });
-          setTimeout(() => {
-            this.setState({ errorMessageDisplay: false });
-          }, 5000); 
-        } 
-      } catch (error) {
-        console.error(error);
-        alert("Une erreur s'est produite lors de l'enregistrement.");
-      }
-    };
+      </div>
+    );
   }
+}
+

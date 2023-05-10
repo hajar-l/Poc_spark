@@ -1,18 +1,19 @@
 import React from 'react';
 import './DefinitionParam.css';
 import logoattineos from './logoattineos.png';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-
+import { Link } from 'react-router-dom';
+//import Perimeter from 'C:/Users/HajarLOULIDI/Attispark/Poc_spark/back/src/Entity/Perimeter.php';
 export default class DefinitionParam extends React.Component{
     state={
         domainNames: [],
         ips: [],
+        ipsString: "",
         bannedIps: [],
+        bannedIpsString: "",
         contactEmail: "",
         confirmationMessage: "",
         ErrorMessage:"",
@@ -24,24 +25,53 @@ export default class DefinitionParam extends React.Component{
 
     change = e=>{
       const { name, value } = e.target;
-      if (name === "ips" || name === "bannedIps" || name==="domainNames") {
+      if (name==="domainNames") {
         const arr = value.split([","]).map(item => item.trim()) ;
         this.setState({ [name]: arr });
       } else {
         this.setState({ [name]: value });
       }
     };
+
+    changeIp = e=>{
+      const { name, value } = e.target;
+      if (name==="ipsString") {
+          this.setState({'ipsString': value});
+      } else if ((name==="bannedIpsString")){
+          this.setState({'bannedIpsString': value});
+      }
+  };
+
+    handleKeyPress = (event, name) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+          const fieldValue = this.state[name];
+          this.setState({ [name]: fieldValue + '\n' });
+          event.preventDefault();
+      }
+  };
     
 
     onSubmit= async (e) =>{
         e.preventDefault();
+        let arr = this.state.ipsString.split(["\n"]).map(item => item.trim()) ;
+        arr = arr.filter(function(element) {
+            return element !== "";
+        });
+
+        this.setState({ ips: arr });
+        let arr2 = this.state.bannedIpsString.split(["\n"]).map(item => item.trim()) ;
+        arr2 = arr2.filter(function(element) {
+            return element !== "";
+        });
+        this.setState({ bannedIps: arr2 });
+
         console.log(this.state);
 
     const payload = {
        
         domainNames: this.state.domainNames,
-        ips: this.state.ips,
-        bannedIps: this.state.bannedIps,
+        ips: arr,
+        bannedIps: arr2,
         contactEmail: this.state.contactEmail,
         
       };
@@ -82,11 +112,14 @@ export default class DefinitionParam extends React.Component{
     handleReviewClose = () => {
       this.setState({ review: false });
     };
-
+    handleButtonClick = (Perimeter) => {
+      // Access the id attribute of the perimeter object
+      const perimeterId = Perimeter.id;
+    };
     render(){
         return (
         <div>
-           <header className = "bar-1"><img src={logoattineos} className='logo'/></header>
+           <header className = "bar-1"><img src={logoattineos} className='logo'  alt=""/></header>
             <div>
             <div className="container">
                 <h1 className="text-4xl font-bold mb-8">Définition du périmètre</h1>
@@ -112,28 +145,31 @@ export default class DefinitionParam extends React.Component{
                 {/* ips Field*/}
                 <div className="mb-4">
                     <label htmlFor="ips" className="block font-bold mb-2">Adresses IP</label>
-                    <input 
-                    type="text"
-                    id="ips"
-                    name="ips"
+                    <textarea 
+                    rows={10}
+                    id="ipsString"
+                    name="ipsString"
                     className="border border-gray-400 p-2 w-full"
                     placeholder="Adresses IP" 
-                    value={this.state.ips} 
+                    value={this.state.ipsString} 
                     onChange={(e)  => this.change(e) }
+                    onKeyPress={(event) => this.handleKeyPress(event, 'ipsString')}
                     required
                     />
                 </div>
                   {/* Adresse IP à exclure Field*/}
                   <div className="mb-4">
                     <label htmlFor="bannedIps" className="block font-bold mb-2">Adresse IP à exclure</label>
-                    <input 
-                    type="text"
-                    id="bannedIps"
-                    name="bannedIps"
+                    <textarea 
+                    
+                    id="bannedIpsString"
+                    name="bannedIpsString"
                     className="border border-gray-400 p-2 w-full"
                     placeholder="Adresse IP à exclure " 
-                    value={this.state.bannedIps} 
+                    value={this.state.bannedIpsString} 
                     onChange={(e)  => this.change(e) }
+                    onKeyPress={(event) => this.handleKeyPress(event, 'bannedIpsString')}
+                    required
                     
                     />
                 </div>
@@ -154,25 +190,26 @@ export default class DefinitionParam extends React.Component{
                 </div>
 
                 <button variant="contained" onMouseDown={this.handleReviewClick}>Vérifier</button>
+                <Link to={"/modification-perimetre/"/*+ this.handleButtonClick(Perimeter)*/}><button >Modifier un périmètre</button></Link>
                 <Dialog open={this.state.review} onClose={this.handleReviewClose}>
                 <DialogTitle>Veuillez vérifier vos informations avant de soumettre</DialogTitle>
                 <DialogContent>
                   <ul>
                   <li>
                   <span className="font-bold">Nom du domaine:</span> {this.state.domainNames.join(', ')}
-                  {this.state.domainNames.length === 0 && <div className="waringmessage">Le champ Nom du domaine est obligatoire.</div>}
+                  
                   </li>
                   <li>
-                  <span className="font-bold">Adresses IP:</span> {this.state.ips.join(', ')}
-                  {this.state.ips.length === 0 && <div className="waringmessage">Le champ Adresses IP  est obligatoire.</div>}
+                  <span className="font-bold">Adresses IP:</span> {this.state.ipsString.replaceAll("\n", ",").replaceAll(",,", ",")}
+                  
                   </li>
                   <li>
-                  <span className="font-bold">Adresses IP exclues:</span> {this.state.bannedIps.join(', ')}
-                  {this.state.bannedIps.length === 0 && <div className="infomessage">Aucune Adresse ip n'est exclue du traitement.</div>}
+                  <span className="font-bold">Adresses IP exclues:</span> {this.state.bannedIpsString.replaceAll("\n", ",")}
+                  
                   </li>
                   <li>
                   <span className="font-bold">Email de contact:</span> {this.state.contactEmail}
-                  {this.state.contactEmail === '' && <div className="waringmessage">Le champ Email de contact est obligatoire.</div>}
+                  
                   </li>
                   </ul>
                 </DialogContent>

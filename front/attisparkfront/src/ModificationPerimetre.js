@@ -1,87 +1,86 @@
-import React from 'react';
-import './DefinitionParam.css';
+import React, { useEffect, useState } from 'react';
+import { useParams ,useNavigate  } from 'react-router-dom';
 import logoattineos from './logoattineos.png';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
+import './DefinitionParam.css';
+import { Link } from 'react-router-dom';
 
-export default class DefinitionParam extends React.Component{
-  state = {
-    domainNames: [],
-    ips: [],
-    bannedIps: [],
-    contactEmail: '',
-  };
+function ModificationPerimetre() {
+  const [formData, setFormData] = useState({});
+  const { id } = useParams();
+  const navigate = useNavigate ();
+  
+  useEffect(() => {
+    // Fetch perimeter data based on the ID
+    fetch('https://127.0.0.1:8001/perimeter/'+ id)
+      .then(response => response.json())
+      .then(data => {
+        setFormData(data);
+      })
+      .catch(error => {
+        console.error('Error fetching perimeter:', error);
+      });
+  }, [id]);
 
-  handleChange = (e) => {
-    const { name, value } = e.target;
-    this.setState({ [name]: value });
-  };
-
-  handleSubmit = (e) => {
+  // Handle form submission
+  const handleSubmit = e => {
     e.preventDefault();
-    // Effectuez ici les actions nécessaires pour enregistrer les modifications
-    // Utilisez this.state pour accéder aux valeurs des champs modifiés
-    console.log(this.state);
+    fetch(`https://127.0.0.1:8001/perimeter/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    })
+      .then(response => response.json())
+      .then(data => {
+        // Handle the response or perform any additional actions
+        console.log('Perimeter updated:', data);
+        // Redirect to a success page or navigate back to the previous page
+        navigate(-1)
+      })
+      .catch(error => {
+        console.error('Error updating perimeter:', error);
+        // Handle the error or display an error message
+      });
   };
+  const handleInputChange = e => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+ 
 
-  render() {
-    return (
-      <div>
-        <h1>Modification des paramètres du périmètre</h1>
-        <form onSubmit={this.handleSubmit}>
-          {/* Champ "Nom du domaine" */}
-          <div>
-            <label htmlFor="domainNames">Nom du domaine :</label>
-            <input
-              type="text"
-              id="domainNames"
-              name="domainNames"
-              value={this.state.domainNames}
-              onChange={this.handleChange}
-            />
+  return (
+    <div>
+      <header className = "bar-1"><img src={logoattineos} className='logo'  alt=""/></header>
+        <div>
+          <div className="container">
+            <h1 className="text-4xl font-bold mb-8">Modification du périmètre</h1>
+            <form onSubmit={handleSubmit}>
+            <div>
+                <label htmlFor="domains">Nom de domaine:</label>
+                <input type="text" id="domains" name="domains" value={formData.domains || ''} onChange={handleInputChange}/>
+            </div>
+            <div>
+                <label htmlFor="ips">Adresses IP:</label>
+                <textarea type="ips" id="ips" name="ips" value={formData.ips || ''} onChange={handleInputChange}/>
+            </div>
+            <div>
+                <label htmlFor="bannedIps">Adresses IP à exclure:</label>
+                <textarea type="bannedIps" id="bannedIps" name="bannedIps" value={formData.bannedIps || ''} onChange={handleInputChange}/>
+            </div>
+            <div className="mb-4">
+              <label htmlFor="contact_mail">Contact Email:</label>
+              <input type="text" id="contact_mail" name="contact_mail"  value={formData.contact_mail || ''} onChange={handleInputChange}/>
+            </div>
+              
+           <button type="submit">Enregistrer les modifications</button>
+            </form>
           </div>
-
-          {/* Champ "Adresses IP" */}
-          <div>
-            <label htmlFor="ips">Adresses IP :</label>
-            <textarea
-              id="ips"
-              name="ips"
-              value={this.state.ips}
-              onChange={this.handleChange}
-            ></textarea>
-          </div>
-
-          {/* Champ "Adresses IP exclues" */}
-          <div>
-            <label htmlFor="bannedIps">Adresses IP exclues :</label>
-            <textarea
-              id="bannedIps"
-              name="bannedIps"
-              value={this.state.bannedIps}
-              onChange={this.handleChange}
-            ></textarea>
-          </div>
-
-          {/* Champ "Mail de contact" */}
-          <div>
-            <label htmlFor="contactEmail">Mail de contact :</label>
-            <input
-              type="text"
-              id="contactEmail"
-              name="contactEmail"
-              value={this.state.contactEmail}
-              onChange={this.handleChange}
-            />
-          </div>
-
-          {/* Bouton de soumission */}
-          <button type="submit">Enregistrer les modifications</button>
-        </form>
+        </div>
       </div>
-    );
-  }
+  );
 }
 
+export default ModificationPerimetre;

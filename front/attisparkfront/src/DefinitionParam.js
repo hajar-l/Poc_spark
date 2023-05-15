@@ -190,7 +190,7 @@ export default class DefinitionParam extends React.Component{
                 </div>
 
                 <button variant="contained" onMouseDown={this.handleReviewClick}>Vérifier</button>
-                <Link to={"/modification-perimetre/"/*+ this.handleButtonClick(Perimeter)*/}><button >Modifier un périmètre</button></Link>
+                <Link to={"/EntityDisplay"}><button >Modifier un périmètre</button></Link>
                 <Dialog open={this.state.review} onClose={this.handleReviewClose}>
                 <DialogTitle>Veuillez vérifier vos informations avant de soumettre</DialogTitle>
                 <DialogContent>

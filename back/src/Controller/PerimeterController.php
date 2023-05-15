@@ -81,7 +81,7 @@ class PerimeterController extends AbstractController
 
 
 
-    #[Route('/perimeter/{id}', name: 'perimeter_show', methods: ['GET'])]
+    #[Route('/perimeter/{id}', name: 'perimeter_show', methods: ['GET', 'PUT'])]
     public function show(Perimeter $perimeter = null): JsonResponse
     {
         if ($perimeter === null) {

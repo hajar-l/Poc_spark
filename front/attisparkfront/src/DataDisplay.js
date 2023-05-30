@@ -27,6 +27,25 @@ function EntityTable() {
         console.error('Error fetching perimeter:', error);
       });
   },[]);
+  const handleDelete = (id) => {
+    // Perform the delete action
+    fetch(`https://127.0.0.1:8001/perimeter/${id}`, {
+      method: 'DELETE',
+    })
+      .then(response => {
+        if (response.ok) {
+          // Delete action successful
+          // Update the perimeter state by removing the deleted item
+          setPerimeter(prevPerimeter => prevPerimeter.filter(item => item.id !== id));
+        } else {
+          throw new Error('Delete action failed');
+        }
+      })
+      .catch(error => {
+        console.error('Delete action error:', error);
+      });
+  };
+
 
   return (
     <div>
@@ -41,6 +60,7 @@ function EntityTable() {
           <th style={tableHeaderStyle}>bannedIps</th>
           <th style={tableHeaderStyle}>contact_mail</th>
           <th style={tableHeaderStyle}>created_at</th>
+          <th style={tableHeaderStyle}>Gestion de périmètre</th>
         </tr>
       </thead>
       <tbody>
@@ -50,13 +70,13 @@ function EntityTable() {
               <td style={tableDataStyle}>{item.id}</td>
               <td style={tableDataStyle}> {item.domains.join(', ')}</td>
               <td style={tableDataStyle}>{item.ips.join(', ')}</td>
-              <td style={tableDataStyle}>{item.bannedIps.join(', ')}</td>
+              <td style={tableDataStyle}>{item.bannedIps.join(', ') ? item.bannedIps.join(', ') :'None'}</td>
               <td style={tableDataStyle}>{item.contact_mail}</td>
               <td style={tableDataStyle}>{item.created_at}</td>
-              <td style={tableDataStyle}><Link to={`/modification-perimetre/${item.id}`}><button >Modifier</button></Link></td>
+              <td style={tableDataStyle}><Link to={`/modification-perimetre/${item.id}`}><button >Modifier</button></Link>
+                                        <button onClick={() => handleDelete(item.id)}>Supprimer</button>
+              </td>
               
-              
-
             </tr>
           ))
         ) : (

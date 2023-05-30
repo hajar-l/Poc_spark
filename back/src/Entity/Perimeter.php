@@ -27,16 +27,16 @@ class Perimeter
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $created_at;
 
-    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Ip", cascade:["persist"])]
+    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Ip", cascade:["persist", "remove"])]
     private $ips;
 
-    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Domain", cascade:["persist"])]
+    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Domain", cascade:["persist", "remove"])]
     private $domains;
 
-    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Vulnerability", cascade:["persist"])]
+    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\Vulnerability", cascade:["persist", "remove"])]
     private $vulnerabilites;
 
-    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\BannedIp", cascade:["persist"])]
+    #[ORM\OneToMany(mappedBy: "perimeter", targetEntity: "App\Entity\BannedIp", cascade:["persist", "remove"])]
     private $bannedIps;
 
     public function __construct()
@@ -71,7 +71,10 @@ class Perimeter
     /**
      * @param ArrayCollection $domains
      */
-
+    public function setDomains(PersistentCollection $domains): void
+    {
+        $this->domains = $domains;
+    }
 
     /**
      * @return string|null
@@ -110,9 +113,19 @@ class Perimeter
         return $this->ips;
     }
 
-    public function setIps(PersistentCollection $ips): void
+    public function setIps(array $ips): void
     {
-        $this->ips = $ips;
+        $ipCollection = new ArrayCollection();
+        
+        foreach ($ips as $ipAddress) {
+            $ip = new Ip();
+            $ip->setIpAddress($ipAddress);
+            $ip->setPerimeter($this);
+            
+            $ipCollection->add($ip);
+        }
+        
+        $this->ips = $ipCollection;
     }
 
 
@@ -176,9 +189,19 @@ class Perimeter
     /**
      * @param ArrayCollection $bannedIps
      */
-    public function setBannedIps(PersistentCollection $bannedIps): void
+    public function setBannedIps(array $bannedIps): void
     {
-        $this->bannedIps = $bannedIps;
+        $bannedIpCollection = new ArrayCollection();
+        
+        foreach ($bannedIps as $ipAddress) {
+            $bannedIp = new BannedIp();
+            $bannedIp->setIpAddress($ipAddress);
+            $bannedIp->setPerimeter($this);
+            
+            $bannedIpCollection->add($bannedIp);
+        }
+        
+        $this->bannedIps = $bannedIpCollection;
     }
 
     public function addBannedIp(BannedIp $ip): self

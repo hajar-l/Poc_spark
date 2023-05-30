@@ -6,20 +6,28 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import { Link } from 'react-router-dom';
+
 //import Perimeter from 'C:/Users/HajarLOULIDI/Attispark/Poc_spark/back/src/Entity/Perimeter.php';
 export default class DefinitionParam extends React.Component{
     state={
         domainNames: [],
+        domainNamesErrorMessage:"",
         ips: [],
         ipsString: "",
+        ipValid: true,
+        ipErrorMessage: "",
+        IpsStringErrorMessage:"",
         bannedIps: [],
         bannedIpsString: "",
+        bannedIpsStringErrorMessage:"",
         contactEmail: "",
+        contactEmailErrorMessage: "",
         confirmationMessage: "",
         ErrorMessage:"",
         review: false,
         successMessageDisplay: false,
         errorMessageDisplay: false,
+        hasErrors: false,
         
     };
 
@@ -28,19 +36,34 @@ export default class DefinitionParam extends React.Component{
       if (name==="domainNames") {
         const arr = value.split([","]).map(item => item.trim()) ;
         this.setState({ [name]: arr });
+        this.validateInput(name, value);
+      } else if (name === "contactEmail") { // Ajouter cette condition pour le champ contactEmail
+        this.setState({ [name]: value });
+        this.validateInput(name, value);
       } else {
         this.setState({ [name]: value });
       }
     };
 
-    changeIp = e=>{
+    changeIp = (e)=>{
       const { name, value } = e.target;
       if (name==="ipsString") {
-          this.setState({'ipsString': value});
+          this.setState({ipsString: value});
+          this.validateInput(name, value); 
+         
       } else if ((name==="bannedIpsString")){
-          this.setState({'bannedIpsString': value});
+          this.setState({bannedIpsString: value});
+          this.validateInput(name, value); 
       }
-  };
+      const ips = value.split('\n').map(ip => ip.trim());
+      const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      const isValid = ips.every(ip => ip === "" || ipRegex.test(ip));
+      const errorMessage = isValid ? "" : `Adresses IP invalides: ${ips.filter(ip => !ipRegex.test(ip)).join(', ')}`;
+      if (name === "ipsString") {
+        this.setState({ ipsString: value, IpsStringErrorMessage: errorMessage });
+      } else if (name === "bannedIpsString") {
+        this.setState({ bannedIpsString: value, bannedIpsStringErrorMessage: errorMessage });
+      }  };
 
     handleKeyPress = (event, name) => {
       if (event.key === 'Enter' || event.key === ' ') {
@@ -49,7 +72,6 @@ export default class DefinitionParam extends React.Component{
           event.preventDefault();
       }
   };
-    
 
     onSubmit= async (e) =>{
         e.preventDefault();
@@ -67,16 +89,15 @@ export default class DefinitionParam extends React.Component{
 
         console.log(this.state);
 
-    const payload = {
-       
+      const payload = {
         domainNames: this.state.domainNames,
         ips: arr,
         bannedIps: arr2,
         contactEmail: this.state.contactEmail,
         
       };
-
-      console.log('request payload',payload);
+      
+      //console.log('request payload',payload);
 
       try {
         const response = await fetch('https://127.0.0.1:8001/perimeter', {
@@ -106,7 +127,8 @@ export default class DefinitionParam extends React.Component{
       }
     };
     handleReviewClick = () => {
-      this.setState({ review: true });
+    
+        this.setState({ review: true });
     };
   
     handleReviewClose = () => {
@@ -116,8 +138,63 @@ export default class DefinitionParam extends React.Component{
       // Access the id attribute of the perimeter object
       const perimeterId = Perimeter.id;
     };
+    
+    validateInput = (fieldName, value) => {
+      let errorMessage = "";
+
+      if(fieldName=== 'contactEmail'){
+        const emailRegex=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if(typeof value =='string'){
+          if (value && !emailRegex.test(value)) {
+            errorMessage = "Adresse e-mail invalide";
+        }
+      }else{
+        console.log("Invalid value type:", typeof value);
+      }
+    }else if(fieldName === "domainNames") {
+      const domainRegex = /^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*$/;
+      console.log("Value before split:", value);
+      if(typeof value ==='string'){
+        const domainNames = value.split(",").map(item => item.trim());
+        console.log("Value after split:", domainNames);
+        const invalidDomains = domainNames.filter(domain => !domainRegex.test(domain));
+        if (invalidDomains.length > 0) {
+          errorMessage = `Le domaine : ${invalidDomains.join(", ")} n'est pas au bon format`;
+        }
+      }else{
+        console.log("Invalid value type:", typeof value);
+      }
+    }else if(fieldName === "bannedIpsString" ){
+      
+      const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;     
+      console.log("Value before split:", value);
+      if (value.trim() !== "") {
+      
+        const ipAddresses = value.split("\n").map(item => item.trim());
+        console.log("Value after split:", ipAddresses);
+        const invalidIPs = ipAddresses.filter(ip => !ipRegex.test(ip));
+        if (invalidIPs.length > 0) {
+          errorMessage = `Les adresses IP suivantes ne sont pas au bon format : ${invalidIPs.join(", ")}`;
+        }
+    }else{
+      console.log("Invalid value type:", value);
+    }
+  }
+    this.setState({ [`${fieldName}ErrorMessage`]: errorMessage }, () => {
+      // Check if any error message is non-empty and set the hasErrors flag accordingly
+      const { contactEmailErrorMessage, domainNamesErrorMessage, IpsStringErrorMessage, bannedIpsStringErrorMessage } = this.state;
+      const hasErrors = (contactEmailErrorMessage !== "" || domainNamesErrorMessage !== "" || IpsStringErrorMessage !== "" || bannedIpsStringErrorMessage !== "");
+      this.setState({ hasErrors });
+    });
+  };
+  isFormEmpty() {
+    const { domainNames, ipsString, contactEmail } = this.state;
+    return !domainNames.length && !ipsString && !contactEmail && this.state.bannedIpsString.trim() === "";
+  }
     render(){
+      const { hasErrors } = this.state;
         return (
+          
         <div>
            <header className = "bar-1"><img src={logoattineos} className='logo'  alt=""/></header>
             <div>
@@ -126,71 +203,94 @@ export default class DefinitionParam extends React.Component{
                 <form onSubmit={this.onSubmit}>
                     {/*domainNames Field*/}
                     <div className="mb-4">
-                        <label htmlFor="domainNames" className="block font-bold mb-2">Nom du domaine</label>
+                        <label htmlFor="domainNames" className="block font-bold mb-2">Nom(s) du domaine <span className="required">*</span></label>
                         <input  
                         //error={this.state.domainNames.length === 0}
                         //helperText={!this.state.domainNames.length ? 'domain name is required' : ''}
                         type="text"
                         id="domainNames"
                         name="domainNames"
-                        className="border border-gray-400 p-2 w-full"
-                        placeholder="Nom du domaine" 
+                        className={'border border-gray-400 p-2 w-full '}
+                        placeholder="domaine1.com, domaine2.com, domaine3.com" 
                         value={this.state.domainNames} 
                         onChange={(e)  => this.change(e)}
+                        onBlur={() => this.validateInput("domainNames", this.state.domainNames)}
                         required
 
+
                         />
+                        {this.state.domainNamesErrorMessage && (
+                      <p className="error-message">{this.state.domainNamesErrorMessage}</p>
+                    )}
                 </div>
                
                 {/* ips Field*/}
                 <div className="mb-4">
-                    <label htmlFor="ips" className="block font-bold mb-2">Adresses IP</label>
+                    <label htmlFor="ips" className="block font-bold mb-2">Adresse(s) IP <span className="required">*</span></label>
                     <textarea 
-                    rows={10}
+                    rows={5}
                     id="ipsString"
                     name="ipsString"
                     className="border border-gray-400 p-2 w-full"
-                    placeholder="Adresses IP" 
+                    placeholder=" 192.168.0.1 
+                    10.0.0.0/24
+                    2001:db8::/32
+                    122.36.5.45:8-12"
                     value={this.state.ipsString} 
-                    onChange={(e)  => this.change(e) }
+                    onChange={(e)  => this.changeIp(e) }
                     onKeyPress={(event) => this.handleKeyPress(event, 'ipsString')}
+                    onBlur={() => this.validateInput("ipsString", this.state.ipsString)}
                     required
                     />
+                  {this.state.IpsStringErrorMessage && (
+                    <p className="error-message">{this.state.IpsStringErrorMessage}</p>
+                  )}
                 </div>
                   {/* Adresse IP à exclure Field*/}
                   <div className="mb-4">
-                    <label htmlFor="bannedIps" className="block font-bold mb-2">Adresse IP à exclure</label>
+                    <label htmlFor="bannedIps" className="block font-bold mb-2">Adresse(s) IP à exclure</label>
                     <textarea 
-                    
+                    rows={5}
                     id="bannedIpsString"
                     name="bannedIpsString"
                     className="border border-gray-400 p-2 w-full"
-                    placeholder="Adresse IP à exclure " 
+                    placeholder=" 192.168.0.1
+                    10.0.0.0
+                    172.16.0.0/16" 
                     value={this.state.bannedIpsString} 
-                    onChange={(e)  => this.change(e) }
+                    onChange={(e)  => this.changeIp(e) }
                     onKeyPress={(event) => this.handleKeyPress(event, 'bannedIpsString')}
-                    required
+                    onBlur={() => this.validateInput("bannedIpsString", this.state.bannedIpsString)}
+                    
                     
                     />
+                      {this.state.bannedIpsStringErrorMessage && (
+                      <p className="error-message">{this.state.bannedIpsStringErrorMessage}</p>
+                    )}
                 </div>
 
                 {/* Mail de contact Field*/}
                 <div className="mb-4">
-                    <label htmlFor="contactEmail" className="block font-bold mb-2">Mail de contact</label>
+                    <label htmlFor="contactEmail" className="block font-bold mb-2">Mail de contact <span className="required">*</span></label>
                     <input 
                     type="text"
                     id="contactEmail"
                     name="contactEmail"
                     className="border border-gray-400 p-2 w-full"
-                    placeholder="Mail de contact" 
+                    placeholder="votreadresse@email.com" 
                     value={this.state.contactEmail} 
                     onChange={(e)  => this.change(e) }
+                    onBlur={() => this.validateInput("contactEmail", this.state.contactEmail)}
                     required
                     />
+                    {this.state.contactEmailErrorMessage && (
+                      <p className="error-message">{this.state.contactEmailErrorMessage}</p>
+                    )}
                 </div>
 
-                <button variant="contained" onMouseDown={this.handleReviewClick}>Vérifier</button>
-                <Link to={"/EntityDisplay"}><button >Modifier un périmètre</button></Link>
+                <button variant="contained" onMouseDown={this.handleReviewClick} disabled={hasErrors || this.isFormEmpty() }>Vérifier</button>
+                {/*<Link to={"/EntityDisplay"}><button >Modifier un périmètre</button></Link>*/}
+               
                 <Dialog open={this.state.review} onClose={this.handleReviewClose}>
                 <DialogTitle>Veuillez vérifier vos informations avant de soumettre</DialogTitle>
                 <DialogContent>
